@@ -1,0 +1,37 @@
+version: 2.1
+commands:
+  pub_get:
+    description: "Install pub dependencies"
+    steps:
+      - restore_cache:
+        key: v1-{{ checksum "dart/pubspec.lock" }}
+      - run:
+          command: pub get
+      - save_cache:
+          key: v1-{{ checksum "dart/pubspec.lock" }}
+          paths:
+            - "$HOME/.pub_cache"
+
+jobs:
+  pub:
+    parameters:
+      tool:
+        description: "tool to run"
+        type: string
+      task:
+        description: "task to run"
+        type: string
+    docker:
+      - image: google/dart
+    steps:
+      - checkout
+      - pub_get
+      - run:
+          command: <<parameters.tool>> <<parameters.task>>
+workflows:
+  dart:
+    jobs:
+      - pub:
+          name: dart analyze
+          tool: dartanalyzer
+          task: lib/*
